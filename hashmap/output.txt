@@ -1,0 +1,11 @@
+bucket 0 
+key:first name, value:last name
+bucket 1 
+key:google, value:poopoo
+bucket 4 
+key:yahoo, value:doodoo
+bucket 7 
+key:googoogoo, value:ooohhohhoooh
+bucket 9 
+key:imap, value:poopoo
+load factor 0.500000

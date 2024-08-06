@@ -9,23 +9,36 @@ int insert(HashMap* dict,char* key, char* value) {
     dict->numEntries++;
     int hash = hashFn(key,dict->tableSize);
     Bucket* curr = &(dict->map[hash]);
-    // head will become a local pointer within function
+
+    // temp will become a local pointer within function
     Node* temp = curr->head;
     Node* toInsert = nodeInit(key,value);
+
     if (temp == NULL) {
+        // will not work since temp is a local pointer 
+        /*temp = toInsert;*/
        curr->head = toInsert; 
        curr->bucketSize++;
        return 1;
     }
+    printf("node already exists, going down chain\n");
 
-    while(temp != NULL) {
+    while(temp->next != NULL) {
         if (temp->value == value) {
+           printf("found duplciate\n");
            dict->numEntries--;
            return -1;
         }
         temp = temp->next;
     }
+    
     temp->next = toInsert;
+    
+    double loadFact =  (double)dict->numEntries/dict->tableSize; 
+
+    if(loadFact >= 0.75) {
+        //resize hashmap
+    }
     return 0;
 }
 
@@ -43,12 +56,25 @@ char* retrieve(HashMap* dict, char* key) {
     return NULL;
 }
 
+int expandDict(HashMap* dict) {
+    printf("resizing current hashmap");
+    // expand dict by 2
+     HashMap* newDict = (HashMap*) malloc(sizeof(*newDict));    
+    
+     newDict->tableSize = 2*dict->tableSize;
+     dict->map = (Bucket*) malloc(newDict->tableSize*sizeof(Bucket));
+     newDict->numEntries = dict->numEntries;
+
+     // go through each element and rehash and insert into new hashmap
+
+}
+
 void printHashMap(HashMap* dict) {
     for(int i=0; i< dict->tableSize;i++) {
         Bucket* buc = &(dict->map[i]);
-        printf("Bucket %d\n", buc->bucketSize);
         Node* curr = buc->head; 
-        if(curr == NULL) {printf("curr is null\n");}
+        /*if(curr == NULL) {printf("curr is null\n");}*/
+        printf("bucket %d \n", i);
         while(curr != NULL) {
             printf("key:%s, value:%s\n", curr->key,curr->value); 
             curr = curr->next;
@@ -66,13 +92,27 @@ int main(void) {
   dict->map = (Bucket*) malloc(10*sizeof(Bucket));
   dict->numEntries = 0;
 
-  int first = insert(dict, "imap", "poopoo");
-  printf("%d",first);
+  insert(dict, "imap", "poopoo");
   insert(dict, "first name", "last name");
   insert(dict, "first name", "last name");
   insert(dict, "googoogoo", "ooohhohhoooh");
+  insert(dict, "google", "poopoo");
+  insert(dict, "yahoo", "doodoo");
+  insert(dict, "s", "dddd");
+  insert(dict, "intel", "rip");
   
-  printHashMap(dict);
+  
+  /*printHashMap(dict);*/
+
+  printf("retrieving now\n");
+
+  char* imap = retrieve(dict,"imap");
+  printf("imap->%s \n", imap);
+
+  // free later
+  /*free(dict);*/
+  /*free(dict->map);*/
+   /*free up the linked lists later*/
   return 0;
 }
 
