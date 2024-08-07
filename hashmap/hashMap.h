@@ -1,8 +1,7 @@
-#include "linkedList.c"
+#include "linkedList.h"
 
 struct Bucket{
     Node* head;
-    Node* tail;
     int bucketSize;
 };
 
@@ -16,3 +15,6 @@ struct HashMap{
     Bucket *map;
 };
 typedef struct HashMap HashMap; 
+
+void destructor(HashMap* dict);
+void expandDict(HashMap**dict);

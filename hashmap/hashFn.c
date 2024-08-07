@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include "hashFn.h"
 
 int hashFn(char* value, int tableSize) {
     long long p = 31, m = 1e9 + 7;
