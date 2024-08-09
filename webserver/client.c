@@ -19,9 +19,9 @@ void errorMsg(char* msg) {
 }
 
 
-int main(void) {
-    
-    char* SERVER = "142.250.189.206";
+int main(int argc, char** argv) {
+    // ip will be last arg passed in c 
+    char* SERVER = argv[argc];
     int sockfd;
     struct sockaddr_in serv_addr;
 
@@ -106,7 +106,6 @@ int main(void) {
         printf("%s", recvline);
     }
     close(sockfd);
-
 }
 
 
