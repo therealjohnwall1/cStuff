@@ -12,13 +12,6 @@
 
 # define cPort 80
 
-void errorMsg(char* msg) {
-    perror(msg);
-    // 1 -> exit failure
-    exit(1);
-}
-
-
 int main(int argc, char** argv) {
     // ip will be last arg passed in c 
     char* SERVER = argv[argc];
