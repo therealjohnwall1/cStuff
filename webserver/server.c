@@ -31,7 +31,7 @@ int main(void) {
     int sockfd;
     sockfd = socket(AF_INET, SOCK_STREAM,0);
     
-    int bindSuc = bind(sockfd, &sockaddr, sizeof(sockaddr));
+    int bindSuc = bind(sockfd, (struct sockaddr*) &sockaddr, sizeof(sockaddr));
     if (bindSuc == -1) {
        perror("cannot bind socket, check port");
        exit(1);
@@ -62,17 +62,8 @@ int main(void) {
     close(sockfd);
     close(openFd);
 
-
     return 0;
 }
-
-
-
-
-
-
-
-
 
 
 
