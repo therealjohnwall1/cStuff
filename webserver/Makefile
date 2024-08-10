@@ -19,6 +19,6 @@ server.o: server.c server.h
 
 # clean
 clean:
-	rm -f *.o client
+	rm -f *.o client server
 
 .PHONY: clean
