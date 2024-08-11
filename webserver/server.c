@@ -12,19 +12,20 @@
 #include<string.h>
 
 #define hostPort 6969
-#define hostIP "127.0.0.1" //localhost
+#define hostIP "127.0.0.1" 
 #define BACKLOG_AMT 10 // amt of pending connections to socket
 
 
 // param = fd of client socket 
 void* threadCreate(void *vargp) {
     int pid = getpid(); // for debugging 
-
+    printf("new thread running: pid: %d\n", pid);
     int* clientP = (int*) vargp;
     int clientFd = *clientP;
 
     // load client req into buffer
-    char clientMsg [256]; 
+    char clientMsg [256] = {0}; 
+	
 
     int rec = recv(clientFd, &clientMsg, 256, 0);
 
@@ -40,12 +41,13 @@ void* threadCreate(void *vargp) {
 
     // actual file client requests
     int openFd= open(file, O_RDONLY);  
+    printf("sent file to client\n");
 
     sendfile(clientFd, openFd, 0,256);
     close(clientFd);
     close(openFd);
-
 }
+
 int main(void) {
     struct sockaddr_in sockaddr;    
     sockaddr.sin_family = AF_INET;
@@ -71,17 +73,22 @@ int main(void) {
     } 
 
     int listenSuc = listen(sockfd, BACKLOG_AMT);
+	// only use id, don't keep track after thread is finished
     pthread_t tid;
+	int ct = 0;
     while (1) {
-        // fd of client socket
+		// pointer allows each thread to have their own client
+		int* clientFd = (int*) malloc(sizeof(int));
         printf("hit");
-        int clientFd = accept(sockfd, 0, 0);
-        if (clientFd >= 0) {
-            if(pthread_create(&tid, NULL, threadCreate, (*void)&clientFd)!=0) {
+       *clientFd = accept(sockfd, 0, 0);
+        if (*clientFd >= 0) {
+            if(pthread_create(&tid, NULL, threadCreate,clientFd)!=0) {
                 perror("failed to make thread");
+				free(clientFd);
                 exit(1);
+            }
         }
-
+	pthread_detach(tid);
     }
     return 0;
 }
