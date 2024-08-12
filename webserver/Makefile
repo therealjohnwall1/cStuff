@@ -12,6 +12,10 @@ server: server.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 # Object
+queue.0: queue.c queue.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Object
 clientTraffic.o: clientTraffic.c client.c client.h
 	$(CC) $(CFLAGS) -c $< -o $@
 

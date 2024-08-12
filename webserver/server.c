@@ -9,12 +9,18 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include<string.h>
+#include <string.h>
+#include <semaphore.h>
+
+#include "queue.h"
 
 #define hostPort 6969
 #define hostIP "127.0.0.1" 
-#define BACKLOG_AMT 10 // amt of pending connections to socket
+#define BACKLOG_AMT 100 // amt of pending connections to socket
+#define THREAD_CT 10
 
+sem_t mutex;
+pthread_t pool [THREAD_CT];
 
 // param = fd of client socket 
 void* threadCreate(void *vargp) {
@@ -49,6 +55,16 @@ void* threadCreate(void *vargp) {
 }
 
 int main(void) {
+    // init 
+
+    // init semaphore
+    sem_init(&mutex, 0, 1);
+
+    //init thread pool first
+    for(int i = 0; i < THREAD_CT; i++ ) {
+        pthread_create(&pool[i], NULL, threadCreate, NULL); 
+    }
+
     struct sockaddr_in sockaddr;    
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_port = htons(hostPort);
@@ -75,20 +91,21 @@ int main(void) {
     int listenSuc = listen(sockfd, BACKLOG_AMT);
 	// only use id, don't keep track after thread is finished
     pthread_t tid;
-	int ct = 0;
+
     while (1) {
-		// pointer allows each thread to have their own client
-		int* clientFd = (int*) malloc(sizeof(int));
+        // pointer allows each thread to have their own client
+        int* clientFd = (int*) malloc(sizeof(int));
         printf("hit");
-       *clientFd = accept(sockfd, 0, 0);
-        if (*clientFd >= 0) {
-            if(pthread_create(&tid, NULL, threadCreate,clientFd)!=0) {
-                perror("failed to make thread");
-				free(clientFd);
-                exit(1);
-            }
-        }
-	pthread_detach(tid);
+        *clientFd = accept(sockfd, 0, 0);
+
+        /*if (*clientFd >= 0) {*/
+            /*if(pthread_create(&tid, NULL, threadCreate,clientFd)!=0) {*/
+                /*perror("failed to make thread");*/
+                /*free(clientFd);*/
+                /*exit(1);*/
+            /*}*/
+        /*}*/
+        pthread_detach(tid);
     }
     return 0;
 }
