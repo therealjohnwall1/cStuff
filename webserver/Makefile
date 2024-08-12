@@ -8,12 +8,8 @@ clientTraffic: clientTraffic.o client.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 # Target (Server)
-server: server.o
+server: server.o queue.o
 	$(CC) $(CFLAGS) $^ -o $@
-
-# Object
-queue.0: queue.c queue.h
-	$(CC) $(CFLAGS) -c $< -o $@
 
 # Object
 clientTraffic.o: clientTraffic.c client.c client.h
@@ -25,6 +21,10 @@ client.o: client.c client.h
 
 # Object
 server.o: server.c server.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Object
+queue.o: queue.c queue.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # clean

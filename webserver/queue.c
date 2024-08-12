@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include "queue.h"
 
-
 int append(workQueue* q, int clientFD) {
-    workNode* toInsert = (workNode*) malloc(sizeof(toInsert));
+    workNode* toInsert = (workNode*) malloc(sizeof(workNode*));
     toInsert->fd = clientFD;
     toInsert->next = NULL;
 
@@ -15,10 +14,11 @@ int append(workQueue* q, int clientFD) {
     else {
         q->tail->next = toInsert;
     }
+
     return 0;
 } 
 
-int pop(workQueue* q) {
+int* pop(workQueue* q) {
     if (q->head == NULL) {
         return NULL;
     }
@@ -28,6 +28,6 @@ int pop(workQueue* q) {
     q->head = q->head->next;
     free(toDel);
 
-    return res;
+    return &res;
 }
 
