@@ -1,8 +1,5 @@
-// Assuming clientSend is the function that handles the connection
-int clientSend(char* SERVER);
-
+#include "client.h"
 int main() {
-    char* SERVER = "localhost"; // Replace with your server address
-    clientSend(SERVER);
+    clientSend(hostIP);
     return 0;
 }

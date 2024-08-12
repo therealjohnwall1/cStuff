@@ -13,5 +13,5 @@ typedef struct workQueue workQueue;
 
 int append(workQueue* q,int clientFD); // add to end
 
-int* pop(workQueue* q); // pop from begining 
+int pop(workQueue* q); // pop from begining 
 
