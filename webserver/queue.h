@@ -1,3 +1,4 @@
+#pragma once
 struct workNode {
     int fd;
     struct workNode* next;

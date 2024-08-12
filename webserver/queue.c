@@ -3,7 +3,6 @@
 #include "queue.h"
 
 
-
 int append(workQueue* q, int clientFD) {
     workNode* toInsert = (workNode*) malloc(sizeof(toInsert));
     toInsert->fd = clientFD;
@@ -21,8 +20,7 @@ int append(workQueue* q, int clientFD) {
 
 int pop(workQueue* q) {
     if (q->head == NULL) {
-        perror("queue is empty, cannot pop");
-        exit(1);
+        return NULL;
     }
     int res = q->head->fd;
 

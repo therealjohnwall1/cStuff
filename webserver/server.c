@@ -19,20 +19,20 @@
 #define BACKLOG_AMT 100 // amt of pending connections to socket
 #define THREAD_CT 10
 
-sem_t mutex;
+// stuff for threading 
+sem_t sema;
 pthread_t pool [THREAD_CT];
+workQueue* queue;
 
 // param = fd of client socket 
-void* threadCreate(void *vargp) {
+void* clientConnection(int clientFd) {
     int pid = getpid(); // for debugging 
     printf("new thread running: pid: %d\n", pid);
-    int* clientP = (int*) vargp;
-    int clientFd = *clientP;
+    /*int* clientP = (int*) vargp;*/
+    /*int clientFd = *clientP;*/
 
     // load client req into buffer
     char clientMsg [256] = {0}; 
-	
-
     int rec = recv(clientFd, &clientMsg, 256, 0);
 
     if (rec >=0) {
@@ -52,13 +52,30 @@ void* threadCreate(void *vargp) {
     sendfile(clientFd, openFd, 0,256);
     close(clientFd);
     close(openFd);
+    sem_post(&sema);
 }
 
+// threadpool version
+void* threadCreate(void *vargp) {
+
+    while(true) {
+        int curr = pop(queue); 
+
+        if (curr != NULL) {
+            clientConnection(curr);
+        }
+
+    }
+}
+
+
 int main(void) {
-    // init 
+    // init queue
+    queue->head = NULL;
+    queue->tail = NULL;
 
     // init semaphore
-    sem_init(&mutex, 0, 1);
+    sem_init(&sema, 0, 1);
 
     //init thread pool first
     for(int i = 0; i < THREAD_CT; i++ ) {
@@ -98,17 +115,14 @@ int main(void) {
         printf("hit");
         *clientFd = accept(sockfd, 0, 0);
 
-        /*if (*clientFd >= 0) {*/
-            /*if(pthread_create(&tid, NULL, threadCreate,clientFd)!=0) {*/
-                /*perror("failed to make thread");*/
-                /*free(clientFd);*/
-                /*exit(1);*/
-            /*}*/
-        /*}*/
-        pthread_detach(tid);
+        if (*clientFd > 1) {
+            append(queue, *clientFd);
+        }
+
+        
+
+
     }
     return 0;
 }
-
-
 
