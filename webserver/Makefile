@@ -16,11 +16,11 @@ clientTraffic.o: clientTraffic.c client.c client.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Object
-client.o: client.c client.h
+client.o: client.c client.h queue.h 
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Object
-server.o: server.c server.h
+server.o: server.c server.h queue.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Object

@@ -24,7 +24,7 @@
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t pool[THREAD_CT];
-workQueue* queue;
+
 
 // param = fd of client socket 
 void clientConnection(int clientFd) {
@@ -44,12 +44,13 @@ void clientConnection(int clientFd) {
 
     // actual file client requests
     int openFd = open(file, O_RDONLY);  
+
     if (openFd < 0) {
         perror("open failed");
         close(clientFd);
         return;
     }
-    printf("sent file to client\n");
+
 
     sendfile(clientFd, openFd, 0, 256);
     close(clientFd);
@@ -63,24 +64,27 @@ void* threadCreate(void *vargp) {
         pthread_mutex_lock(&mutex);
 
         // no null, just use neg
-        if ((curr = pop(queue)) == -1) {
+        while ((curr = pop()) == -1) {
+            printf("looped waiting, curr = %d\n", curr);
             pthread_cond_wait(&cond, &mutex);
-            curr = pop(queue);
-        } 
+            printf("bruh\n");
+        }
+
         pthread_mutex_unlock(&mutex);
-        if (curr != NULL) {
+        if (curr != -1) {
             printf("popping from queue: %d\n", curr);
             clientConnection(curr);
         }
     }
+
     return NULL;
 }
 
 int main(void) {
     // init queue
-    queue = (workQueue*) malloc(sizeof(workQueue));
-    queue->head = NULL;
-    queue->tail = NULL;
+    q = (workQueue*) malloc(sizeof(workQueue));
+    q->head = NULL;
+    q->tail = NULL;
 
     // init semaphore
     /*sem_init(&sema, 0, 1);*/
@@ -90,21 +94,23 @@ int main(void) {
         pthread_create(&pool[i], NULL, threadCreate, NULL); 
     }
 
-    struct sockaddr_in sockaddr;    
+    struct sockaddr_in sockaddr; 
+    memset((char *)&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_port = htons(hostPort);
-    int bindIP = inet_pton(AF_INET, hostIP, &sockaddr.sin_addr);
-    if (bindIP <= 0) {
-        if (bindIP == 0) {
-            perror("does not contain string with valid address");
-        }
-        else {
-            perror("no valid addr family");
-        }
-        exit(1);
-    }
+    sockaddr.sin_addr.s_addr = INADDR_ANY;
+    // int bindIP = inet_pton(AF_INET, hostIP, &sockaddr.sin_addr);
+    // if (bindIP <= 0) {
+    //     if (bindIP == 0) {
+    //         perror("does not contain string with valid address");
+    //     }
+    //     else {
+    //         perror("no valid addr family");
+    //     }
+    //     exit(1);
+    // }
     
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sockfd < 0) {
         perror("socket creation failed");
         exit(1);
@@ -122,16 +128,15 @@ int main(void) {
     }
 
     while (1) {
-        int* clientFd = (int*) malloc(sizeof(int));
-        *clientFd = accept(sockfd, NULL, NULL);
-        if (*clientFd < 0) {
+        int clientFd = accept(sockfd, NULL, NULL);
+        printf("accepted %d\n", clientFd);
+        if (clientFd < 0) {
             perror("accept failed");
-            free(clientFd);
             continue;
         }
         pthread_mutex_lock(&mutex);
-        printf("appending to queue\n");
-        append(queue, *clientFd);
+        // printf("appending to queue\n");
+        append(clientFd);
         pthread_cond_signal(&cond);
         pthread_mutex_unlock(&mutex);
     }
