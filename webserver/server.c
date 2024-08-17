@@ -1,6 +1,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/sendfile.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -18,6 +19,7 @@
 #define hostIP "127.0.0.1" 
 #define BACKLOG_AMT 50 // amt of pending connections to socket
 #define THREAD_CT 10 
+#define ERROR_PAGE "error.html"
 
 // stuff for threading 
 /*sem_t sema;*/
@@ -26,10 +28,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t pool[THREAD_CT];
 
 
-// param = fd of client socket 
 void clientConnection(int clientFd) {
-    int pid = getpid(); // for debugging 
-
     // load client req into buffer
     char clientMsg[256] = {0}; 
     int rec = recv(clientFd, &clientMsg, 256, 0);
@@ -37,20 +36,65 @@ void clientConnection(int clientFd) {
     if (rec >= 0) {
         printf("received\n");
     }
-
-   
     char* file = clientMsg + 5;
     *strchr(file, ' ') = 0; // null term
-
     // actual file client requests
     int openFd = open(file, O_RDONLY);  
+    char sucMsg[1024];
+    struct stat st;
+	int res;
+	int fileSize;
+	printf("file: %s\n", file);
+	printf("file end\n");
 
     if (openFd < 0) {
-        perror("open failed");
+        perror("open failed file DNE\n");
+		// client asking for a non existent file, send error message and kill
+		/*char* errorPG = "error.html";*/
+		char errorPG[] = "error.html";
+		printf("hit1\n");
+		printf("opening %s\n", errorPG);
+		/**strchr(errorPG, ' ') = 0;*/
+		openFd = open(errorPG, O_RDONLY);
+		stat(errorPG, &st);
+		fileSize = st.st_size;
+		printf("file size: %d\n", fileSize);
+		sprintf(sucMsg,
+			"HTTP/1.1 404 ERROR\r\n"
+			"Content-Type: text/html\r\n"
+			"Content-Length: %d\r\n"
+			"\r\n",
+			fileSize
+			);
+		
+		res = write(clientFd, sucMsg, strlen(sucMsg));
+		if(res != (int)strlen(sucMsg)){
+			exit(1);	
+		}
+		int status = sendfile(clientFd, openFd, 0, 256);
+		printf("send file status, %d\n", status);
         close(clientFd);
-        return;
+		close(openFd);
+		return;
     }
 
+    // info about requested file
+    stat(file, &st);
+    fileSize = st.st_size;
+    // send back on success
+    
+    sprintf(sucMsg,
+        "HTTP/1.1 200 Success\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: %d\r\n"
+        "\r\n", // The final CRLF signifies the end of headers
+        fileSize
+    ); 
+
+    res = write(clientFd, sucMsg, strlen(sucMsg));
+    if(res != (int)strlen(sucMsg)){
+        exit(1);
+    }
 
     sendfile(clientFd, openFd, 0, 256);
     close(clientFd);
@@ -65,14 +109,11 @@ void* threadCreate(void *vargp) {
 
         // no null, just use neg
         while ((curr = pop()) == -1) {
-            printf("looped waiting, curr = %d\n", curr);
             pthread_cond_wait(&cond, &mutex);
-            printf("bruh\n");
         }
 
         pthread_mutex_unlock(&mutex);
         if (curr != -1) {
-            printf("popping from queue: %d\n", curr);
             clientConnection(curr);
         }
     }
