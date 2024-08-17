@@ -71,8 +71,8 @@ void clientConnection(int clientFd) {
 		if(res != (int)strlen(sucMsg)){
 			exit(1);	
 		}
-		int status = sendfile(clientFd, openFd, 0, 256);
-		printf("send file status, %d\n", status);
+		sendfile(clientFd, openFd, NULL, fileSize);
+		/*printf("send file status, %d\n", status);*/
         close(clientFd);
 		close(openFd);
 		return;
@@ -96,7 +96,7 @@ void clientConnection(int clientFd) {
         exit(1);
     }
 
-    sendfile(clientFd, openFd, 0, 256);
+	sendfile(clientFd, openFd, NULL, fileSize);
     close(clientFd);
     close(openFd);
 }
