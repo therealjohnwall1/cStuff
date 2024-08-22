@@ -3,11 +3,14 @@ class freqNode {
 		int frequency;
 		char symbol;		
 		int huffCode; // change later, usually store bits not int (8bit not good);
-
         // children
-
         freqNode* left;
         freqNode* right;
+
+        freqNode(int freq, char sym) {
+           frequency = freq;
+           symbol = sym; 
+        }
 };
 
 class compareNode {
@@ -16,7 +19,7 @@ class compareNode {
             if (n1.frequency == n2.frequency) {
                 return true;
             }
-            return n1.frequency > n2.frequency;
+            return n1.frequency < n2.frequency;
         }
 };
 

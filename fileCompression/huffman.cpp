@@ -25,10 +25,13 @@ priority_queue<freqNode,vector<freqNode>,compareNode> countFrequencies(string fi
                 if (freqMap.find(line[i]) == freqMap.end()) {
                     freqMap.insert({line[i], 1});
                 }
+
                 else {
                     //freqMap[line[i]] = freqMap[line[i]] + 1;
-                    freqMap[line[i]]++ ;
+                    freqMap[line[i]]++;
+
                 }
+
             }
         }
     }
@@ -43,12 +46,18 @@ priority_queue<freqNode,vector<freqNode>,compareNode> countFrequencies(string fi
 	
 	// create frequency table(prior queue)
      priority_queue<freqNode,vector<freqNode>,compareNode> freqQueue;
+        
+     for(auto i: freqMap) {
+         // char, freq
+         // constructor takes frequency first
+        freqNode toIns(i.second, i.first);
+        freqQueue.push(toIns);
+     }
      return freqQueue;
 }
 
-
-void buildTree(priority_queue<freqNode,vector<freqNode>,compareNode> queue) {
-// pass
+void buildTree(priority_queue<freqNode,vector<freqNode>,compareNode> *queue) {
+    // test queue
 
 }
 
@@ -56,7 +65,13 @@ void buildTree(priority_queue<freqNode,vector<freqNode>,compareNode> queue) {
 
 int main() {
     string path = "huffman.cpp";
-    countFrequencies(path);
+    priority_queue<freqNode,vector<freqNode>,compareNode> test = countFrequencies(path);
+    while(!test.empty()) {
+       freqNode n = test.top(); 
+       cout << "node frequency: " << n.frequency << " : " << n.symbol << "\n";
+       test.pop();
+    }
+
 }
 
 
