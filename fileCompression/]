@@ -1,11 +1,10 @@
 #include <iostream>
-#include <cstddef>
 
 class freqNode {
 	public:
 		int frequency;
 		char symbol;		
-        //std::byte huffCode; // change later, usually store bits not int (8bit not good);
+		int huffCode; // change later, usually store bits not int (8bit not good);
         // children
         freqNode* left;
         freqNode* right;
@@ -15,12 +14,15 @@ class freqNode {
            symbol = sym; 
         }
 
-        //~freqNode() {
+        ~freqNode() {
             // delete tree from root node should only be called once
-            //std::cout << "starting destructor \n";
-            // do later
-        //}
+            std::cout << "starting destructor \n";
 
+            // do later
+                
+
+
+        }
 };
 
 class compareNode {
