@@ -3,7 +3,8 @@
 #include <unordered_map>
 #include <queue>
 #include <vector>
-#include "nodes.cpp"
+#include "nodes.h"
+//#include "huffman.h"
 
 using std::string;
 using std::fstream;
@@ -29,7 +30,6 @@ priority_queue<freqNode,vector<freqNode>,compareNode>* countFrequencies(string f
                 else {
                     //freqMap[line[i]] = freqMap[line[i]] + 1;
                     freqMap[line[i]]++;
-
                 }
 
             }
@@ -94,6 +94,32 @@ void generateCodes(freqNode* curr, string str,unordered_map<char, std::string>& 
     generateCodes(curr->left, str+"1", huffmanCode);
     generateCodes(curr->right, str+"0", huffmanCode);
 }
+
+void serializeTree(freqNode* curr, std::ostream &ser) {
+    if(!curr) {
+        // store as null
+        ser << "#";
+    } 
+    ser << curr->symbol << " ";
+    serializeTree(curr->left, ser);
+    serializeTree(curr->right, ser);
+}
+
+freqNode* deserializeTree(std:: istream &ser) {
+	std::string val;
+    ser >> val;
+
+    if (val == "#") {
+        return nullptr;  // Null node.
+    }
+
+    freqNode* node = new freqNode(val[0]);  
+    node->left = deserializeTree(ser);   
+    node->right = deserializeTree(ser); 
+
+    return node;
+}
+
 
 
 int main() {
