@@ -81,11 +81,18 @@ freqNode* buildTree(priority_queue<freqNode,vector<freqNode>,compareNode> *queue
     return root;
 }
 
-void generateCodes(freqNode* curr, string& str,unordered_map<char, std::string>& huffmanCode) {
-    // gen codes for each char, store in dict we can write this to a file to encode, save the tree to decode
-    //
-    
-    
+void generateCodes(freqNode* curr, string str,unordered_map<char, std::string>& huffmanCode) {
+    if (!curr) {
+        return;
+    }
+
+    if (!curr->right && !curr->left) {
+        //huffmanCode->insert({curr->symbol, huffmanCode});
+        huffmanCode[curr->symbol] = str;
+    }
+
+    generateCodes(curr->left, str+"1", huffmanCode);
+    generateCodes(curr->right, str+"0", huffmanCode);
 }
 
 
@@ -94,10 +101,14 @@ int main() {
     string path = "huffman.cpp";
     priority_queue<freqNode,vector<freqNode>,compareNode> *test = countFrequencies(path);
     
-    // build tree
     freqNode* root;
     root = buildTree(test);
 
-}
+    unordered_map<char, std::string> huffCodes;
+    generateCodes(root, "" ,huffCodes);
 
+    for(const auto& code: huffCodes) {
+        cout << "char: " << code.first << " encoding: " << code.second << "\n";
+    }
+}
 
