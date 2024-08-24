@@ -3,8 +3,11 @@
 #include <unordered_map>
 #include <queue>
 #include <vector>
+#include <bitset>
+#include <bit>
+
 #include "nodes.h"
-//#include "huffman.h"
+#include "huffman.h"
 
 using std::string;
 using std::fstream;
@@ -110,16 +113,54 @@ freqNode* deserializeTree(std:: istream &ser) {
     ser >> val;
 
     if (val == "#") {
-        return nullptr;  // Null node.
+        return nullptr;  
     }
 
     freqNode* node = new freqNode(val[0]);  
     node->left = deserializeTree(ser);   
     node->right = deserializeTree(ser); 
-
     return node;
 }
 
+void compressFile(string path, unordered_map<char, string> huffCodes) {
+    // write to string first
+    string encodedString = "";
+    fstream file(path, std::ios::in);
+    string line;
+    if (file.is_open()) {
+        while (getline(file, line)) { 
+            //cout << line << "\n"; // Print the current line 
+            for (int i = 0; i < (int)line.size();i++) {
+                encodedString += huffCodes[line[i]];
+            }
+        }
+    }
+    std::ofstream ofs{path+"_zipped.bin", std::ios::binary};
+    
+    unsigned char currByte = 0;
+    int bitCt = 0;
+    for (char bit: encodedString) {
+        currByte <<= 1;
+
+        if (bit == '1') {
+            currByte |= 1;
+        }
+
+        bitCt += 1;
+
+        if(bitCt == 8) {
+            ofs.put(currByte);
+            bitCt = 0;
+            currByte = 0;
+        }
+    }
+    if (bitCt > 0) {
+        currByte <<=(8-bitCt);
+        ofs.put(currByte);
+    }
+
+    ofs.close();
+}
 
 
 int main() {
@@ -132,9 +173,11 @@ int main() {
 
     unordered_map<char, std::string> huffCodes;
     generateCodes(root, "" ,huffCodes);
+    compressFile(path, huffCodes);
+    
 
-    for(const auto& code: huffCodes) {
-        cout << "char: " << code.first << " encoding: " << code.second << "\n";
-    }
+    //for(const auto& code: huffCodes) {
+        //cout << "char: " << code.first << " encoding: " << code.second << "\n";
+    //}
 }
 

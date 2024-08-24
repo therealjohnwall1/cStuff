@@ -13,7 +13,7 @@ huffman.o: huffman.cpp huffman.h
 # Object
 nodes.o: nodes.cpp nodes.h
 	$(CC) $(CFLAGS) -c $< -o $@
-
+	
 
 clean:
 	rm -f *.o huffman 
