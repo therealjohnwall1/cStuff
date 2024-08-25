@@ -8,8 +8,8 @@ struct freqSorted{
     }
 };
 
- std::vector<std::pair<int, int>> sorting(std::map<char,int> sortedMap) {
-     std::vector<std::pair<int, int>> mapVector(sortedMap.begin(), sortedMap.end());
+ std::vector<std::pair<char, int>> sorting(std::map<char,int> sortedMap) {
+     std::vector<std::pair<char, int>> mapVector(sortedMap.begin(), sortedMap.end());
 
      std::sort(mapVector.begin(), mapVector.end(), freqSorted());
      //for (const auto& pair : mapVector) {

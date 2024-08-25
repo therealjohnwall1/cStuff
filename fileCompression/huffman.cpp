@@ -18,6 +18,8 @@ using std::cout;
 using std::priority_queue;
 using std::vector;
 
+typedef unsigned int uint;
+
 priority_queue<freqNode,vector<freqNode>,compareNode>* countFrequencies(string filePath) {
     fstream file(filePath, std::ios::in);
     unordered_map<char, int> freqMap; 
@@ -115,12 +117,30 @@ void serializeTree(unordered_map<char, string> freqMap,std::ostream &ser) {
     for(auto i: freqMap) {
         sortedMap[i.first] = (int)i.second.size();
     }
-    sorting(sortedMap); 
+    std::vector<std::pair<char, int>> sortVec = sorting(sortedMap); 
+    uint freqLength = 0;
+    string bitSequence = "";
+    
+    for(auto i: sortVec) {
+        //cout << i.first << ":" << i.second << " " << freqMap[i.first] << "\n";
+        freqLength += (8+i.second);
+        bitSequence.append(freqMap[i.first]);
+    }
+    cout << bitSequence << "\n";
+    uint headerLen = bitSequence.size() + freqLength;
+
+    ser.write( reinterpret_cast<const char*>(&headerLen),sizeof(headerLen));
+    ser.write(reinterpret_cast<const char*>(&freqLength), sizeof(freqLength));
+    for(auto i: sortVec) {
+        ser.write(&i.first, sizeof(i.first));
+        ser.write(reinterpret_cast<const char*>(&i.second), sizeof(i.second));
+    }
+
+    ser.write(reinterpret_cast<const char*>(&bitSequence), sizeof(bitSequence));
 }
 
 void compressFile(string path,freqNode* root) {
     std::ofstream ofs{path+"_zipped.bin", std::ios::binary};
-
     unordered_map<char, string> huffCodes;
     generateCodes(root, "" ,huffCodes);
     // write to string first
@@ -153,6 +173,7 @@ void compressFile(string path,freqNode* root) {
             currByte = 0;
         }
     }
+
     if (bitCt > 0) {
         currByte <<=(8-bitCt);
         ofs.put(currByte);
@@ -162,14 +183,7 @@ void compressFile(string path,freqNode* root) {
 }
 
 void decompressFile(string path) {
-    if (".bin" != path.substr(path.size()-3, path.size())) {
-        cout << "invalid file type\n";
-        return;
-    }
-
-    
 }
-
 
 int main() {
     // example prog
@@ -179,13 +193,9 @@ int main() {
     freqNode* root;
     root = buildTree(test);
 
-    unordered_map<char, std::string> huffCodes;
-    generateCodes(root, "" ,huffCodes);
-    
     std::ofstream testStream{"test", std::ios::binary};
 
-    serializeTree(huffCodes, testStream);
-    //compressFile(path, huffCodes);
+    compressFile(path, root);
     
 
     //for(const auto& code: huffCodes) {
