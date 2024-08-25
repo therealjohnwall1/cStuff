@@ -2,9 +2,10 @@
 #include <fstream>
 #include <unordered_map>
 #include <queue>
-//#include <vector>
+#include <vector>
 #include <bitset>
 #include <bit>
+
 
 //#include "nodes.h"
 #include "utils.h"
@@ -65,8 +66,9 @@ priority_queue<freqNode,vector<freqNode>,compareNode>* countFrequencies(string f
 freqNode* buildTree(priority_queue<freqNode,vector<freqNode>,compareNode> *queue) {
     // while queue length is geq 2
    //freqNode *root = new freqNode();
-   freqNode *root = (freqNode*)malloc(sizeof(freqNode*));
-    while(queue->size() >=  2) {
+   //freqNode *root = (freqNode*)malloc(sizeof(freqNode));
+   freqNode *root = new freqNode();
+    while(queue->size() >= 2) {
        freqNode *first = new freqNode(queue->top());
        queue->pop();
        freqNode *second= new freqNode(queue->top());
@@ -74,12 +76,16 @@ freqNode* buildTree(priority_queue<freqNode,vector<freqNode>,compareNode> *queue
 
        // merge both of them into a new node
        // counting node no char should represent only frequency of kids
-       freqNode toAdd(first->frequency + second->frequency, NULL);
-       toAdd.left = first;
-       toAdd.right = second;
-       queue->push(toAdd);
-       if (queue->size() == 2) {
-           *root = queue->top();
+       freqNode *toAdd = new freqNode (first->frequency + second->frequency, NULL);
+       toAdd->left = first;
+       toAdd->right = second;
+       queue->push(*toAdd);
+
+       //if (queue->size() == 2) {
+          //*root = queue->top();
+       //}
+       if (queue->size() == 1) {
+                   root = new freqNode(queue->top());
        }
     }
     return root;
@@ -100,19 +106,20 @@ void generateCodes(freqNode* curr, string str,unordered_map<char, std::string>& 
     generateCodes(curr->right, str+"0", huffmanCode);
 }
 
-void serializeTree(freqNode* root, std::ostream &ser) {
+void serializeTree(unordered_map<char, string> freqMap,std::ostream &ser) {
     // will use cannocial way of serializing it -> store the "frequency bit" rather then entire tree
-
     int serialSize = 0; // in bits
     // "table" char(1byte) + frequency bits(can vary)
     // actual encoded bits for freq(can also vary)
-    
+    std::map<char,int> sortedMap; 
+    for(auto i: freqMap) {
+        sortedMap[i.first] = (int)i.second.size();
+    }
+    sorting(sortedMap); 
 }
 
 void compressFile(string path,freqNode* root) {
     std::ofstream ofs{path+"_zipped.bin", std::ios::binary};
-
-    serializeTree(root, ofs);
 
     unordered_map<char, string> huffCodes;
     generateCodes(root, "" ,huffCodes);
@@ -174,6 +181,10 @@ int main() {
 
     unordered_map<char, std::string> huffCodes;
     generateCodes(root, "" ,huffCodes);
+    
+    std::ofstream testStream{"test", std::ios::binary};
+
+    serializeTree(huffCodes, testStream);
     //compressFile(path, huffCodes);
     
 

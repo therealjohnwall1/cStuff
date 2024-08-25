@@ -7,6 +7,7 @@ class freqNode {
         freqNode* left;
         freqNode* right;
 
+        freqNode();
 		freqNode(char sym);
         freqNode(int freq, char sym);
         //~freqNode() 

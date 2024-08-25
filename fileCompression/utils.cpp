@@ -1,22 +1,20 @@
 #include "utils.h"
+struct freqSorted{
+    bool operator()(const std::pair <char, int> &a, const std::pair <char, int> &b) {
+       if (a.second == b.second) {
+           return a.first < b.first;
+       }
+       return a.second < b.second;
+    }
+};
 
-bool compare(std::pair <char, int> &a, std::pair <char, int> &b) {
-   if (a.second == b.second) {
-       return a.first < b.first;
-   }
+ std::vector<std::pair<int, int>> sorting(std::map<char,int> sortedMap) {
+     std::vector<std::pair<int, int>> mapVector(sortedMap.begin(), sortedMap.end());
 
-   return a.second < b.second;
-}
+     std::sort(mapVector.begin(), mapVector.end(), freqSorted());
+     //for (const auto& pair : mapVector) {
+         //std::cout << (char)pair.first << ": " << pair.second << std::endl;
+      //}
+     return mapVector;
 
-std::map <char, int> sorting( std::map <char, int> inputMap ){
-   std::vector<std::pair <char, int> > pairVec;
-   std::map<char, int> sortedMap;
-   
-   for ( auto& it : inputMap ) {
-      pairVec.push_back( it );
-   }
-   
-   sort( pairVec.begin(), pairVec.end(), compare);
-   
-   return sortedMap;
 }

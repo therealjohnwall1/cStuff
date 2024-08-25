@@ -2,6 +2,9 @@
 #include <cstddef>
 #include "nodes.h"
 
+freqNode::freqNode() {
+
+}
 freqNode::freqNode(int freq, char sym) {
    frequency = freq;
    symbol = sym; 

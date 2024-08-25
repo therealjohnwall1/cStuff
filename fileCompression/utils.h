@@ -4,3 +4,4 @@
 #include <utility>
 #include <vector>
 
+ std::vector<std::pair<int, int>> sorting( std::map <char, int> inputMap );
