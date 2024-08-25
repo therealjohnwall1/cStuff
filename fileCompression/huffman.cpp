@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <queue>
 #include <vector>
-#include <bitset>
 #include <bit>
 
 
@@ -108,54 +107,7 @@ void generateCodes(freqNode* curr, string str,unordered_map<char, std::string>& 
     generateCodes(curr->right, str+"0", huffmanCode);
 }
 
-void serializeTree(unordered_map<char, string> freqMap,std::ostream &ser) {
-    // will use cannocial way of serializing it -> store the "frequency bit" rather then entire tree
-    int serialSize = 0; // in bits
-    // "table" char(1byte) + frequency bits(can vary)
-    // actual encoded bits for freq(can also vary)
-    std::map<char,int> sortedMap; 
-    for(auto i: freqMap) {
-        sortedMap[i.first] = (int)i.second.size();
-    }
-    std::vector<std::pair<char, int>> sortVec = sorting(sortedMap); 
-    uint freqLength = 0;
-    string bitSequence = "";
-    
-    for(auto i: sortVec) {
-        //cout << i.first << ":" << i.second << " " << freqMap[i.first] << "\n";
-        freqLength += (8+i.second);
-        bitSequence.append(freqMap[i.first]);
-    }
-    cout << bitSequence << "\n";
-    uint headerLen = bitSequence.size() + freqLength;
-
-    ser.write( reinterpret_cast<const char*>(&headerLen),sizeof(headerLen));
-    ser.write(reinterpret_cast<const char*>(&freqLength), sizeof(freqLength));
-    for(auto i: sortVec) {
-        ser.write(&i.first, sizeof(i.first));
-        ser.write(reinterpret_cast<const char*>(&i.second), sizeof(i.second));
-    }
-
-    ser.write(reinterpret_cast<const char*>(&bitSequence), sizeof(bitSequence));
-}
-
-void compressFile(string path,freqNode* root) {
-    std::ofstream ofs{path+"_zipped.bin", std::ios::binary};
-    unordered_map<char, string> huffCodes;
-    generateCodes(root, "" ,huffCodes);
-    // write to string first
-    string encodedString = "";
-    fstream file(path, std::ios::in);
-    string line;
-    if (file.is_open()) {
-        while (getline(file, line)) { 
-            //cout << line << "\n"; // Print the current line 
-            for (int i = 0; i < (int)line.size();i++) {
-                encodedString += huffCodes[line[i]];
-            }
-        }
-    }
-    
+void writeString(string encodedString, std::ostream &ofs) {
     unsigned char currByte = 0;
     int bitCt = 0;
     for (char bit: encodedString) {
@@ -178,11 +130,60 @@ void compressFile(string path,freqNode* root) {
         currByte <<=(8-bitCt);
         ofs.put(currByte);
     }
+}
 
+void serializeTree(unordered_map<char, string> freqMap,std::ostream &ofs) {
+    // will use cannocial way of serializing it -> store the "frequency bit" rather then entire tree
+    int serialSize = 0; // in bits
+    std::map<char,int> sortedMap; 
+    for(auto i: freqMap) {
+        sortedMap[i.first] = (int)i.second.size();
+    }
+    std::vector<std::pair<char, int>> sortVec = sorting(sortedMap); 
+    uint freqLength = 0;
+    string bitSequence = "";
+    
+    for(auto i: sortVec) {
+        //cout << i.first << ":" << i.second << " " << freqMap[i.first] << "\n";
+        freqLength += (8+i.second);
+        bitSequence.append(freqMap[i.first]);
+    }
+    cout << bitSequence << "\n";
+    uint headerLen = bitSequence.size() + freqLength;
+
+    ofs.write( reinterpret_cast<const char*>(&headerLen),sizeof(headerLen));
+    ofs.write(reinterpret_cast<const char*>(&freqLength), sizeof(freqLength));
+    for(auto i: sortVec) {
+        ofs.write(&i.first, sizeof(i.first));
+        ofs.write(reinterpret_cast<const char*>(&i.second), sizeof(i.second));
+    }
+
+    writeString(bitSequence, ofs);
+}
+
+void compressFile(string path,freqNode* root) {
+    std::ofstream ofs{path+"_zipped.bin", std::ios::binary};
+    unordered_map<char, string> huffCodes;
+    generateCodes(root, "" ,huffCodes);
+    // write to string first
+    string encodedString = "";
+    fstream file(path, std::ios::in);
+    string line;
+    if (file.is_open()) {
+        while (getline(file, line)) { 
+            //cout << line << "\n"; // Print the current line 
+            for (int i = 0; i < (int)line.size();i++) {
+                encodedString += huffCodes[line[i]];
+            }
+        }
+    }
+    
+    writeString(encodedString, ofs);
     ofs.close();
 }
 
 void decompressFile(string path) {
+
 }
 
 int main() {
