@@ -16,7 +16,6 @@ freqNode::freqNode(char sym) {
     // do later
 //}
 
-
 bool compareNode::operator()(const freqNode &n1, const freqNode &n2) {
     if (n1.frequency == n2.frequency) {
         return true;

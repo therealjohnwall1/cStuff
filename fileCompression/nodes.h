@@ -1,7 +1,9 @@
+#include <string>
 class freqNode {
 	public:
 		int frequency;
 		char symbol;		
+        std::string code;
         freqNode* left;
         freqNode* right;
 

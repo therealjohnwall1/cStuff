@@ -2,11 +2,12 @@
 #include <fstream>
 #include <unordered_map>
 #include <queue>
-#include <vector>
+//#include <vector>
 #include <bitset>
 #include <bit>
 
-#include "nodes.h"
+//#include "nodes.h"
+#include "utils.h"
 #include "huffman.h"
 
 using std::string;
@@ -92,37 +93,29 @@ void generateCodes(freqNode* curr, string str,unordered_map<char, std::string>& 
     if (!curr->right && !curr->left) {
         //huffmanCode->insert({curr->symbol, huffmanCode});
         huffmanCode[curr->symbol] = str;
+        curr->code = str;
     }
 
     generateCodes(curr->left, str+"1", huffmanCode);
     generateCodes(curr->right, str+"0", huffmanCode);
 }
 
-void serializeTree(freqNode* curr, std::ostream &ser) {
-    if(!curr) {
-        // store as null
-        ser << "#";
-    } 
-    ser << curr->symbol << " ";
-    serializeTree(curr->left, ser);
-    serializeTree(curr->right, ser);
+void serializeTree(freqNode* root, std::ostream &ser) {
+    // will use cannocial way of serializing it -> store the "frequency bit" rather then entire tree
+
+    int serialSize = 0; // in bits
+    // "table" char(1byte) + frequency bits(can vary)
+    // actual encoded bits for freq(can also vary)
+    
 }
 
-freqNode* deserializeTree(std:: istream &ser) {
-	std::string val;
-    ser >> val;
+void compressFile(string path,freqNode* root) {
+    std::ofstream ofs{path+"_zipped.bin", std::ios::binary};
 
-    if (val == "#") {
-        return nullptr;  
-    }
+    serializeTree(root, ofs);
 
-    freqNode* node = new freqNode(val[0]);  
-    node->left = deserializeTree(ser);   
-    node->right = deserializeTree(ser); 
-    return node;
-}
-
-void compressFile(string path, unordered_map<char, string> huffCodes) {
+    unordered_map<char, string> huffCodes;
+    generateCodes(root, "" ,huffCodes);
     // write to string first
     string encodedString = "";
     fstream file(path, std::ios::in);
@@ -135,7 +128,6 @@ void compressFile(string path, unordered_map<char, string> huffCodes) {
             }
         }
     }
-    std::ofstream ofs{path+"_zipped.bin", std::ios::binary};
     
     unsigned char currByte = 0;
     int bitCt = 0;
@@ -162,6 +154,15 @@ void compressFile(string path, unordered_map<char, string> huffCodes) {
     ofs.close();
 }
 
+void decompressFile(string path) {
+    if (".bin" != path.substr(path.size()-3, path.size())) {
+        cout << "invalid file type\n";
+        return;
+    }
+
+    
+}
+
 
 int main() {
     // example prog
@@ -173,7 +174,7 @@ int main() {
 
     unordered_map<char, std::string> huffCodes;
     generateCodes(root, "" ,huffCodes);
-    compressFile(path, huffCodes);
+    //compressFile(path, huffCodes);
     
 
     //for(const auto& code: huffCodes) {
