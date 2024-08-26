@@ -145,7 +145,6 @@ void serializeTree(unordered_map<char, string> freqMap,std::ostream &ofs) {
     }
 
     std::vector<std::pair<char, int>> sortVec = sorting(sortedMap); 
-    uint freqLength = 0;
 
     // also use cannocial codes instead of original ones
     for (auto i: sortVec) {
@@ -160,7 +159,8 @@ void serializeTree(unordered_map<char, string> freqMap,std::ostream &ofs) {
 
     // convert to bytes i think might be wrong ngl
     //freqLength = calcByteSize(freqLength);
-    freqLength = freqMap.size(); // not in bytes,just amt of entries(5 bytes per)
+    uint freqLength = freqMap.size();
+    // freqLength = freqMap.size(); // not in bytes,just amt of entries(5 bytes per)
     uint sequenceLen= calcByteSize(bitSequence.size());
 
     cout << "encoding " << freqLength << "," << sequenceLen << "\n";
@@ -168,19 +168,20 @@ void serializeTree(unordered_map<char, string> freqMap,std::ostream &ofs) {
     ofs.write(reinterpret_cast<const char*>(&freqLength), sizeof(freqLength));
     ofs.write(reinterpret_cast<const char*>(&sequenceLen),sizeof(sequenceLen));
 
-    //for(auto i: sortVec) {
-        //ofs.write(&i.first, sizeof(i.first));
-        //ofs.write(reinterpret_cast<const char*>(&i.second), sizeof(i.second));
-    //}
+    for(auto i: sortVec) {
+        ofs.write(&i.first, sizeof(i.first));
+        ofs.write(reinterpret_cast<const char*>(&i.second), sizeof(i.second));
+    }
+
     writeString(bitSequence, ofs);
 }
 
 void compressFile(string path,freqNode* root) {
-    std::ofstream ofs{path+"_zipped.dat", std::ios::binary};
+    std::ofstream ofs{"huffmanZip.dat", std::ios::binary};
 
-    uint test = 5;
-    ofs.write(reinterpret_cast<const char*>(&test), sizeof(test));
-    
+    if (!ofs.good()) {
+        cout << " ofs stream is bad will not work\n";
+    }
     unordered_map<char, string> huffCodes;
     generateCodes(root, "" ,huffCodes);
     serializeTree(huffCodes, ofs);
@@ -206,13 +207,14 @@ void compressFile(string path,freqNode* root) {
 // 2. sequence size + sequence
 // 3. actual encoding
 void decompressFile(string path) {
-    cout << path.substr(path.size()-4, path.size()) << "\n";
+    cout << path << "\n";
 
-    if (path.substr(path.size()-4, path.size()) != ".dat") {
-       cout << "invalid file type\n"; 
+    std::ifstream ifs{path, std::ios::binary};
+    if (!ifs) {
+       cout << "invalid file \n"; 
        return;
     }
-    std::ifstream ifs{path, std::ios::binary};
+
 
     // not in bytes, just entries(each is 5)
     uint freqLength;
@@ -239,7 +241,6 @@ void decompressFile(string path) {
         cout << a.first << ":" << a.second << "\n";
     }
     //for(int i=0;i< sequenceLen;i++) {
-        
 
     //}
 
@@ -253,14 +254,9 @@ int main() {
     freqNode* root;
     root = buildTree(test);
 
-    std::ofstream testStream{"test", std::ios::binary};
 
     compressFile(path, root);
-    decompressFile(path+"_zippped.dat");
+    decompressFile("huffmanZip.dat");
 
-
-    //for(const auto& code: huffCodes) {
-        //cout << "char: " << code.first << " encoding: " << code.second << "\n";
-    //}
 }
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <iostream>
 
 int main() {
     std::ofstream ofs{"test.dat", std::ios::binary};
@@ -12,6 +13,9 @@ int main() {
     ofs.close();
 
     std::ifstream ifs{"test.dat", std::ios::binary};
+    if (!ifs.good()) {
+        std::cout << "stream is bad will not work\n";
+    }
     unsigned int inputLen;
     ifs.read(reinterpret_cast<char*>(&inputLen), sizeof(freqLength));
     std::cout << "Frequency length: " << inputLen<< "\n";
