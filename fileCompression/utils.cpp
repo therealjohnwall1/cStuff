@@ -16,5 +16,4 @@ struct freqSorted{
          //std::cout << (char)pair.first << ": " << pair.second << std::endl;
       //}
      return mapVector;
-
 }

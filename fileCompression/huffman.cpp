@@ -107,9 +107,14 @@ void generateCodes(freqNode* curr, string str,unordered_map<char, std::string>& 
     generateCodes(curr->right, str+"0", huffmanCode);
 }
 
+// turn to macro
+uint calcByteSize(uint bitSize) {
+    return 1+((bitSize-1)/8);
+}
+
 void writeString(string encodedString, std::ostream &ofs) {
     unsigned char currByte = 0;
-    int bitCt = 0;
+    uint bitCt = 0;
     for (char bit: encodedString) {
         currByte <<= 1;
 
@@ -134,37 +139,51 @@ void writeString(string encodedString, std::ostream &ofs) {
 
 void serializeTree(unordered_map<char, string> freqMap,std::ostream &ofs) {
     // will use cannocial way of serializing it -> store the "frequency bit" rather then entire tree
-    int serialSize = 0; // in bits
     std::map<char,int> sortedMap; 
     for(auto i: freqMap) {
         sortedMap[i.first] = (int)i.second.size();
     }
+
     std::vector<std::pair<char, int>> sortVec = sorting(sortedMap); 
     uint freqLength = 0;
+
+    // also use cannocial codes instead of original ones
+    for (auto i: sortVec) {
+        freqMap[i.first] = i.second;
+    }
     string bitSequence = "";
-    
+
     for(auto i: sortVec) {
         //cout << i.first << ":" << i.second << " " << freqMap[i.first] << "\n";
-        freqLength += (8+i.second);
         bitSequence.append(freqMap[i.first]);
     }
-    cout << bitSequence << "\n";
-    uint headerLen = bitSequence.size() + freqLength;
 
-    ofs.write( reinterpret_cast<const char*>(&headerLen),sizeof(headerLen));
+    // convert to bytes i think might be wrong ngl
+    //freqLength = calcByteSize(freqLength);
+    freqLength = freqMap.size(); // not in bytes,just amt of entries(5 bytes per)
+    uint sequenceLen= calcByteSize(bitSequence.size());
+
+    cout << "encoding " << freqLength << "," << sequenceLen << "\n";
+
     ofs.write(reinterpret_cast<const char*>(&freqLength), sizeof(freqLength));
-    for(auto i: sortVec) {
-        ofs.write(&i.first, sizeof(i.first));
-        ofs.write(reinterpret_cast<const char*>(&i.second), sizeof(i.second));
-    }
+    ofs.write(reinterpret_cast<const char*>(&sequenceLen),sizeof(sequenceLen));
 
+    //for(auto i: sortVec) {
+        //ofs.write(&i.first, sizeof(i.first));
+        //ofs.write(reinterpret_cast<const char*>(&i.second), sizeof(i.second));
+    //}
     writeString(bitSequence, ofs);
 }
 
 void compressFile(string path,freqNode* root) {
-    std::ofstream ofs{path+"_zipped.bin", std::ios::binary};
+    std::ofstream ofs{path+"_zipped.dat", std::ios::binary};
+
+    uint test = 5;
+    ofs.write(reinterpret_cast<const char*>(&test), sizeof(test));
+    
     unordered_map<char, string> huffCodes;
     generateCodes(root, "" ,huffCodes);
+    serializeTree(huffCodes, ofs);
     // write to string first
     string encodedString = "";
     fstream file(path, std::ios::in);
@@ -177,12 +196,52 @@ void compressFile(string path,freqNode* root) {
             }
         }
     }
-    
+    file.close();
     writeString(encodedString, ofs);
     ofs.close();
 }
 
+// file layout:
+// 1. header size(freq table and sequence size)
+// 2. sequence size + sequence
+// 3. actual encoding
 void decompressFile(string path) {
+    cout << path.substr(path.size()-4, path.size()) << "\n";
+
+    if (path.substr(path.size()-4, path.size()) != ".dat") {
+       cout << "invalid file type\n"; 
+       return;
+    }
+    std::ifstream ifs{path, std::ios::binary};
+
+    // not in bytes, just entries(each is 5)
+    uint freqLength;
+    ifs.read(reinterpret_cast<char*>(&freqLength), sizeof(freqLength));
+    cout << "freq length:" << freqLength << "\n";
+    
+    // size of cannoical codes
+    uint sequenceLen;
+    ifs.read(reinterpret_cast<char*>(&sequenceLen), sizeof(sequenceLen));
+    cout << "sequence length:" << sequenceLen << "\n";
+
+    // char + frequency, will change to char + actual codes
+    std::map <char,int> freqMap; 
+    
+    for(int i=0;i<(int)freqLength;i++) {
+        char sym;
+        ifs.read(&sym, sizeof(sym));
+        int frq;
+        ifs.read(reinterpret_cast<char*>(&frq), sizeof(frq));
+        freqMap[sym] = frq;
+    }
+
+    for(auto a : freqMap) {
+        cout << a.first << ":" << a.second << "\n";
+    }
+    //for(int i=0;i< sequenceLen;i++) {
+        
+
+    //}
 
 }
 
@@ -197,7 +256,8 @@ int main() {
     std::ofstream testStream{"test", std::ios::binary};
 
     compressFile(path, root);
-    
+    decompressFile(path+"_zippped.dat");
+
 
     //for(const auto& code: huffCodes) {
         //cout << "char: " << code.first << " encoding: " << code.second << "\n";
