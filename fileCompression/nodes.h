@@ -1,4 +1,5 @@
 #include <string>
+
 class freqNode {
 	public:
 		int frequency;

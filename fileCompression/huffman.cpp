@@ -4,6 +4,7 @@
 #include <queue>
 #include <vector>
 #include <bit>
+#include <bitset>
 
 
 //#include "nodes.h"
@@ -150,6 +151,7 @@ void serializeTree(unordered_map<char, string> freqMap,std::ostream &ofs) {
     for (auto i: sortVec) {
         freqMap[i.first] = i.second;
     }
+
     string bitSequence = "";
 
     for(auto i: sortVec) {
@@ -165,26 +167,31 @@ void serializeTree(unordered_map<char, string> freqMap,std::ostream &ofs) {
 
     cout << "encoding " << freqLength << "," << sequenceLen << "\n";
 
-    ofs.write(reinterpret_cast<const char*>(&freqLength), sizeof(freqLength));
-    ofs.write(reinterpret_cast<const char*>(&sequenceLen),sizeof(sequenceLen));
+    ofs.write(reinterpret_cast<const char*>(&freqLength), sizeof(uint));
+    ofs.write(reinterpret_cast<const char*>(&sequenceLen),sizeof(uint));
 
     for(auto i: sortVec) {
-        ofs.write(&i.first, sizeof(i.first));
-        ofs.write(reinterpret_cast<const char*>(&i.second), sizeof(i.second));
+        // cout << "symbol:" << i.first << " frequency: " << i.second << "\n";
+        ofs.write(&i.first, sizeof(char));
+        // to lazy to int->byte
+        string toWrite = std::to_string(i.second);
+        // writeString(toWrite, ofs);
+        ofs.write(reinterpret_cast<const char*>(&i.second), sizeof(int));
     }
-
-    writeString(bitSequence, ofs);
+    
+    // don't need to store the actual codes, can rebuild given order + len
+    // writeString(bitSequence, ofs);
 }
 
 void compressFile(string path,freqNode* root) {
     std::ofstream ofs{"huffmanZip.dat", std::ios::binary};
-
     if (!ofs.good()) {
         cout << " ofs stream is bad will not work\n";
     }
     unordered_map<char, string> huffCodes;
     generateCodes(root, "" ,huffCodes);
     serializeTree(huffCodes, ofs);
+
     // write to string first
     string encodedString = "";
     fstream file(path, std::ios::in);
@@ -202,10 +209,40 @@ void compressFile(string path,freqNode* root) {
     ofs.close();
 }
 
-// file layout:
-// 1. header size(freq table and sequence size)
-// 2. sequence size + sequence
-// 3. actual encoding
+// left(1), right(0)
+void insertNode(freqNode* curr, string code, int itr) {
+    if(itr == code.size()) {
+        curr->code = code;
+        return;
+    }
+
+    if(!curr){
+        curr = new freqNode();
+    }
+    
+    char currChar= code.at(itr);
+    cout << "char: " << currChar << "\n";
+
+    if (currChar == '1') {
+        insertNode(curr->left, code, itr+1);
+    }
+    
+    else {
+        insertNode(curr->right, code, itr+1);
+    }
+}
+
+freqNode* rebuildTree(std::map<char, string> huffCodes) {
+    freqNode* root = new freqNode();
+    // root->code = 0;
+    for(auto i: huffCodes) {
+        cout << "hit" << i.first << " " << i.second << " \n";
+        insertNode(root, i.second,0);
+    }
+
+    return root;
+}
+
 void decompressFile(string path) {
     cout << path << "\n";
 
@@ -237,12 +274,31 @@ void decompressFile(string path) {
         freqMap[sym] = frq;
     }
 
-    for(auto a : freqMap) {
-        cout << a.first << ":" << a.second << "\n";
-    }
-    //for(int i=0;i< sequenceLen;i++) {
+    std::vector<std::pair<char,int>> sortVec = sorting(freqMap);
 
-    //}
+    // generate cannocial codes for each
+    std::map<char, std::string> huffmanCodes;
+    int currentCode = 0;
+    int currentLength = sortVec[0].second;
+
+    for (auto i: sortVec) {
+        char character = i.first;
+        int codeLength = i.second;
+
+        if (codeLength > currentLength) {
+            currentCode <<= (codeLength - currentLength);
+            currentLength = codeLength;
+        }
+
+        huffmanCodes[character] = std::bitset<32>(currentCode).to_string().substr(32 - codeLength);
+        // cout << character << " " << huffmanCodes[character] << "\n";
+        currentCode++;
+    }
+
+
+    // rebuild tree
+    freqNode* root = rebuildTree(huffmanCodes); 
+
 
 }
 
@@ -253,10 +309,7 @@ int main() {
     
     freqNode* root;
     root = buildTree(test);
-
-
     compressFile(path, root);
     decompressFile("huffmanZip.dat");
-
 }
 
