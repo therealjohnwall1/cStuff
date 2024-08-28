@@ -1,4 +1,3 @@
 #pragma once
 
-int hashFn(char* value, int tableSize);
- 
+int hashFn(char *value, int tableSize);

@@ -1,50 +1,50 @@
+#include "queue.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "queue.h"
 
-workQueue* q; 
+workQueue *q;
 
 int append(int clientFD) {
-    workNode* toInsert = (workNode*) malloc(sizeof(workNode));
-    if (toInsert == NULL) {
-        perror("malloc failed");
-        return -1;
-    }
-    toInsert->fd = clientFD;
-    toInsert->next = NULL;
+  workNode *toInsert = (workNode *)malloc(sizeof(workNode));
+  if (toInsert == NULL) {
+    perror("malloc failed");
+    return -1;
+  }
+  toInsert->fd = clientFD;
+  toInsert->next = NULL;
 
-    if ((q->head == NULL) && (q->tail == NULL)) {
-        q->head = toInsert;
-        q->tail = toInsert;
-    } else {
-        q->tail->next = toInsert;
-        q->tail = toInsert;
-    }
-    printf("appendced %d\n", clientFD);
-    return 0;
-} 
+  if ((q->head == NULL) && (q->tail == NULL)) {
+    q->head = toInsert;
+    q->tail = toInsert;
+  } else {
+    q->tail->next = toInsert;
+    q->tail = toInsert;
+  }
+  printf("appendced %d\n", clientFD);
+  return 0;
+}
 
 int pop() {
-    if (q->head == NULL) {
-        printf("end of list\n");
-        return -1; 
-    }
+  if (q->head == NULL) {
+    printf("end of list\n");
+    return -1;
+  }
 
-    int res = q->head->fd;
+  int res = q->head->fd;
 
-    workNode* toDel = q->head;
-    if(q->head->next != NULL){
-        printf("head = %d, next = %d\n", q->head->fd, q->head->next->fd);
-    }else{
-        printf("head = %d\n", q->head->fd);
-    }
-    q->head = q->head->next;
-    if (q->head == NULL) {
-        q->tail = NULL; 
-    }
-    free(toDel);
+  workNode *toDel = q->head;
+  if (q->head->next != NULL) {
+    printf("head = %d, next = %d\n", q->head->fd, q->head->next->fd);
+  } else {
+    printf("head = %d\n", q->head->fd);
+  }
+  q->head = q->head->next;
+  if (q->head == NULL) {
+    q->tail = NULL;
+  }
+  free(toDel);
 
-    return res;
+  return res;
 }
 
 // int main() {
