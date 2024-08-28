@@ -1,5 +1,5 @@
 #include "client.h"
 int main() {
-    clientSend(hostIP);
-    return 0;
+  clientSend(hostIP);
+  return 0;
 }
