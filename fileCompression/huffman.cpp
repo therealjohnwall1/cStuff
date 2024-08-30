@@ -47,9 +47,6 @@ priority_queue<freqNode,vector<freqNode>,compareNode>* countFrequencies(string f
         printf("failed to open file\n");
     }
 
-   //for (const auto& pair : freqMap) {
-        //cout << "Key: " << pair.first << ", Value: " << pair.second << "\n";
-    //} 
 	
 	// create frequency table(prior queue)
      //priority_queue<freqNode,vector<freqNode>,compareNode> freqQueue;
@@ -185,9 +182,11 @@ void serializeTree(unordered_map<char, string> freqMap,std::ostream &ofs) {
 
 void compressFile(string path,freqNode* root) {
     std::ofstream ofs{"huffmanZip.dat", std::ios::binary};
+
     if (!ofs.good()) {
         cout << " ofs stream is bad will not work\n";
     }
+
     unordered_map<char, string> huffCodes;
     generateCodes(root, "" ,huffCodes);
     serializeTree(huffCodes, ofs);
@@ -209,37 +208,34 @@ void compressFile(string path,freqNode* root) {
     ofs.close();
 }
 
-// left(1), right(0)
-void insertNode(freqNode* curr, string code, int itr) {
-    if(itr == code.size()) {
-        curr->code = code;
-        return;
-    }
+void insertNode(freqNode* curr, string& code, int itr) {
+  if (code.size() == 0) {
+      return;
+  }
 
-    if(!curr){
-        curr = new freqNode();
-    }
-    
-    char currChar= code.at(itr);
-    cout << "char: " << currChar << "\n";
+   freqNode* toIns = new freqNode();
+  // left(1), right(0)
+  if(code[itr] == 0) {
+   toIns->symbol = '0';
+   curr->right = toIns;
+   insertNode(toIns, code, itr+1); 
+  }
 
-    if (currChar == '1') {
-        insertNode(curr->left, code, itr+1);
-    }
-    
-    else {
-        insertNode(curr->right, code, itr+1);
-    }
+  else if(code[0] == 1) {
+    toIns->symbol = '1';
+    curr->left = toIns;
+    insertNode(toIns, code, itr+1); 
+  }
 }
 
 freqNode* rebuildTree(std::map<char, string> huffCodes) {
-    freqNode* root = new freqNode();
-    // root->code = 0;
+    //freqNode* root = new freqNode();
+    freqNode* root = new freqNode(); //should innit within the insert method
     for(auto i: huffCodes) {
-        cout << "hit" << i.first << " " << i.second << " \n";
-        insertNode(root, i.second,0);
+       cout << "hit: " << i.first << " " << i.second << " \n";
+        freqNode* toIns = new freqNode();
+        insertNode(toIns, i.second, 0);
     }
-
     return root;
 }
 
@@ -251,7 +247,6 @@ void decompressFile(string path) {
        cout << "invalid file \n"; 
        return;
     }
-
 
     // not in bytes, just entries(each is 5)
     uint freqLength;
@@ -295,10 +290,8 @@ void decompressFile(string path) {
         currentCode++;
     }
 
-
     // rebuild tree
     freqNode* root = rebuildTree(huffmanCodes); 
-
 
 }
 

@@ -5,10 +5,12 @@
 freqNode::freqNode() {
 
 }
+
 freqNode::freqNode(int freq, char sym) {
    frequency = freq;
    symbol = sym; 
 }
+
 freqNode::freqNode(char sym) {
 	symbol = sym;
 }
