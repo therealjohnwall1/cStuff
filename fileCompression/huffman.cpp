@@ -203,28 +203,32 @@ void compressFile(string path,freqNode* root) {
             }
         }
     }
+
     file.close();
     writeString(encodedString, ofs);
     ofs.close();
 }
 
-void insertNode(freqNode* curr, string& code, int itr) {
-  if (code.size() == 0) {
+void insertNode(freqNode* curr, char symbol, string& code, int itr) {
+  if (itr == code.size()) {
+      //cout << "inserting node" << "\n";
+      curr->symbol = symbol;  
       return;
   }
 
-   freqNode* toIns = new freqNode();
-  // left(1), right(0)
-  if(code[itr] == 0) {
-   toIns->symbol = '0';
-   curr->right = toIns;
-   insertNode(toIns, code, itr+1); 
+  //cout << "iterating through " << code << " on itr: " << itr << "\n";
+  if(code[itr] == '0') {
+    if(curr->left == nullptr) {
+      curr->left = new freqNode();
+    }
+    insertNode(curr->left, symbol,code, itr+1); 
   }
 
-  else if(code[0] == 1) {
-    toIns->symbol = '1';
-    curr->left = toIns;
-    insertNode(toIns, code, itr+1); 
+  else if(code[itr] == '1') {
+    if(curr->right == nullptr) {
+      curr->right= new freqNode();
+    }
+    insertNode(curr->right, symbol, code, itr+1); 
   }
 }
 
@@ -232,11 +236,34 @@ freqNode* rebuildTree(std::map<char, string> huffCodes) {
     //freqNode* root = new freqNode();
     freqNode* root = new freqNode(); //should innit within the insert method
     for(auto i: huffCodes) {
-       cout << "hit: " << i.first << " " << i.second << " \n";
-        freqNode* toIns = new freqNode();
-        insertNode(toIns, i.second, 0);
+       //cout << "hit: " << i.first << " " << i.second << " \n";
+        insertNode(root, i.first, i.second, 0);
     }
     return root;
+}
+
+void printBFS(freqNode* root) {
+    if (!root) {
+        return;  
+    }
+
+    std::queue<freqNode*> q;
+    q.push(root);  
+
+    while (!q.empty()) {
+        freqNode* current = q.front();  // Get the node at the front of the queue.
+        q.pop();  
+        
+        std::cout << current->symbol << " " << current->code << "\n";  // Print the value of the current node.
+
+        if (current->left) {
+            q.push(current->left);
+        }
+
+        if (current->right) {
+            q.push(current->right);
+        }
+    }
 }
 
 void decompressFile(string path) {
@@ -292,7 +319,40 @@ void decompressFile(string path) {
 
     // rebuild tree
     freqNode* root = rebuildTree(huffmanCodes); 
+    printBFS(root);
 
+    freqNode* curr = root;
+
+    // read rest of message
+    string decodedString = "";
+    
+    char currByte;
+    while(ifs.get(currByte)) {
+         for (int i = 7; i >= 0; --i) {
+               int currBit = ((currByte>> i) & 0x1);
+
+            //cout << currBit << " hit\n";
+            //if(curr->symbol != NULL) {
+            if(curr->left == nullptr && curr->right == nullptr) {
+                decodedString += curr->symbol;
+                curr = root;
+            }
+
+            // left(1), right(0)
+            else if(currBit == 0) {
+                curr = curr->right;
+            }
+
+            else {
+                curr = curr->left;
+            }
+        } 
+    }
+    if(curr->left == nullptr && curr->right == nullptr) {
+        decodedString += curr->symbol;
+    }
+
+    cout << decodedString;
 }
 
 int main() {

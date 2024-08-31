@@ -3,7 +3,8 @@
 #include "nodes.h"
 
 freqNode::freqNode() {
-
+    left = nullptr;
+    right = nullptr;
 }
 
 freqNode::freqNode(int freq, char sym) {
