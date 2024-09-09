@@ -1,7 +1,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/sendfile.h>
-#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -19,7 +18,6 @@
 #define hostIP "127.0.0.1" 
 #define BACKLOG_AMT 50 // amt of pending connections to socket
 #define THREAD_CT 10 
-#define ERROR_PAGE "error.html"
 
 // stuff for threading 
 /*sem_t sema;*/
@@ -38,65 +36,26 @@ void clientConnection(int clientFd) {
     }
     char* file = clientMsg + 5;
     *strchr(file, ' ') = 0; // null term
+
     // actual file client requests
     int openFd = open(file, O_RDONLY);  
-    char sucMsg[1024];
-    struct stat st;
-	int res;
-	int fileSize;
-	printf("file: %s\n", file);
-	printf("file end\n");
 
     if (openFd < 0) {
-        perror("open failed file DNE\n");
-		// client asking for a non existent file, send error message and kill
-		/*char* errorPG = "error.html";*/
-		char errorPG[] = "error.html";
-		printf("hit1\n");
-		printf("opening %s\n", errorPG);
-		/**strchr(errorPG, ' ') = 0;*/
-		openFd = open(errorPG, O_RDONLY);
-		stat(errorPG, &st);
-		fileSize = st.st_size;
-		printf("file size: %d\n", fileSize);
-		sprintf(sucMsg,
-			"HTTP/1.1 404 ERROR\r\n"
-			"Content-Type: text/html\r\n"
-			"Content-Length: %d\r\n"
-			"\r\n",
-			fileSize
-			);
-		
-		res = write(clientFd, sucMsg, strlen(sucMsg));
-		if(res != (int)strlen(sucMsg)){
-			exit(1);	
-		}
-		sendfile(clientFd, openFd, NULL, fileSize);
-		/*printf("send file status, %d\n", status);*/
+        perror("open failed");
         close(clientFd);
-		close(openFd);
-		return;
+        return;
     }
-
-    // info about requested file
-    stat(file, &st);
-    fileSize = st.st_size;
-    // send back on success
     
-    sprintf(sucMsg,
+    char* stuff = 
         "HTTP/1.1 200 Success\r\n"
-        "Content-Type: text/html\r\n"
-        "Content-Length: %d\r\n"
-        "\r\n", // The final CRLF signifies the end of headers
-        fileSize
-    ); 
-
-    res = write(clientFd, sucMsg, strlen(sucMsg));
-    if(res != (int)strlen(sucMsg)){
+        "Content-Type: text/html\r\n\r\n";
+    
+    int res = write(clientFd, stuff, strlen(stuff));
+    if(res != (int)strlen(stuff)){
         exit(1);
     }
 
-	sendfile(clientFd, openFd, NULL, fileSize);
+    sendfile(clientFd, openFd, 0, 256);
     close(clientFd);
     close(openFd);
 }

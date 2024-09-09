@@ -239,6 +239,7 @@ freqNode* rebuildTree(std::map<char, string> huffCodes) {
        //cout << "hit: " << i.first << " " << i.second << " \n";
         insertNode(root, i.first, i.second, 0);
     }
+
     return root;
 }
 
@@ -254,7 +255,7 @@ void printBFS(freqNode* root) {
         freqNode* current = q.front();  // Get the node at the front of the queue.
         q.pop();  
         
-        std::cout << current->symbol << " " << current->code << "\n";  // Print the value of the current node.
+        cout << current->symbol << " " << "\n";  // Print the value of the current node.
 
         if (current->left) {
             q.push(current->left);
@@ -264,6 +265,7 @@ void printBFS(freqNode* root) {
             q.push(current->right);
         }
     }
+    cout << "\n";
 }
 
 void decompressFile(string path) {
